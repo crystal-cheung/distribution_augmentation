@@ -1,0 +1,1 @@
+it seems that there is no difference between network_input , network_target

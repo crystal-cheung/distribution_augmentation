@@ -29,11 +29,11 @@ from datasets import get_dataset, iter_data_mpi, JankySubsampledDataset
 from autoaugment import distort_image_with_randaugment
 
 
-H = Hyperparams() #
+H = Hyperparams()
 
 
 AugmentationType = namedtuple("AugmentationType", ("sos_name", "description", "num_tokens", "is_used", "fn"))
-#sos_name is the name of the start of sequence token
+
 
 def f32_storage_getter(getter, name, shape=None, dtype=tf.float32,
                        initializer=None, regularizer=None,
@@ -301,7 +301,7 @@ def dense_attention(x, n_heads, attn_mode, use_cache=False, train=False, pdrop=N
 
     qh = h[:, -1:, :] if use_cache else h
 
-    q = linear('q_proj', qh, n_state, std=np.sqrt(H.qk_w / nx)) #
+    q = linear('q_proj', qh, n_state, std=np.sqrt(H.qk_w / nx))
     k = linear('k_proj', h, n_state, std=np.sqrt(H.qk_w / nx))
     v = linear('v_proj', h, nx, std=np.sqrt(H.v_w / nx))
 
@@ -502,14 +502,14 @@ def stack(X, X_emb, train, step=None, cache=None):
 
 
 def get_logits(name, h, n_out, train=False):
-    n, t, nx = shape_list(h)  #nx number of features
-    w_std = np.sqrt(H.logits_w / nx) #logits_w is weight of the last layer
+    n, t, nx = shape_list(h)
+    w_std = np.sqrt(H.logits_w / nx)
     with tf.variable_scope(name):
         w = tf.get_variable(
             "logits_proj", [nx, n_out], dtype=H.dtype,
-            initializer=random_or_zeros_init(stddev=w_std)) #w is logits projection matrix
-        w = embedding_dropout(w, train) #dropout
-        h = tf.reshape(h, [-1, nx]) 
+            initializer=random_or_zeros_init(stddev=w_std))
+        w = embedding_dropout(w, train)
+        h = tf.reshape(h, [-1, nx])
         logits = tf.matmul(h, w)
     return tf.reshape(logits, [n, t, n_out])
 
@@ -539,17 +539,16 @@ def get_losses(logits, labels, mask=None):
 
 
 def model(train=False):
-    '''Build the model and return the loss and logits.'''
     with tf.variable_scope('model', custom_getter=f32_storage_getter):
-        network_input = H.X_ph #placeholder
-        network_target = H.X_ph 
+        network_input = H.X_ph
+        network_target = H.X_ph
         if H.rand_augment and train:
             assert network_input.shape[-1] == 3072, 'TODO: support other image sizes'
             network_input = tf.reshape(tf.cast(network_input, tf.uint8), [-1, 32, 32, 3])
             if H.rand_augment_conditioning:
                 if H.use_unconditional_augmentation:
                     raise NotImplementedError
-                rand_augment_idx = [t.sos_name for t in H.self_gen_types if t.is_used].index('sos_aa') #sos_aa is the name of the variable s
+                rand_augment_idx = [t.sos_name for t in H.self_gen_types if t.is_used].index('sos_aa')
                 batch = []
                 with tf.device('/cpu:0'):
                     for i in range(H.n_batch):
@@ -1074,7 +1073,7 @@ if __name__ == '__main__':
     np.random.seed(H.seed)
     # Different seed for TF to randomize model sampling/dropout across ranks
     tf.set_random_seed(H.seed * mpi_rank())
-    # Augmentation nprng 
+    # Augmentation nprng
     aug_nprng = np.random.RandomState(H.aug_seed + mpi_rank())
 
     # Cache for objects/tensors that should persist through recompute, eval, and/or samples
