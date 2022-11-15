@@ -411,7 +411,7 @@ def add_position_embedding(x, x_emb, train, step):
         name = f"pos_emb_{idx}"
         we = tf.get_variable(
             name, [vsize, H.n_embd], dtype=H.dtype,
-            initializer=random_or_zeros_init(stddev=emb_std))
+            initializer=random_or_zeros_init(stddev=emb_std)) 
         e = bs.embedding_lookup(we, x_emb[:, idx, :])
         e = embedding_dropout(e, train)
         x += e
@@ -419,6 +419,7 @@ def add_position_embedding(x, x_emb, train, step):
 
 
 def stack(X, X_emb, train, step=None, cache=None):
+    '''Stack of Transformer layers.'''
     with tf.name_scope('input_processing'):
         we = tf.get_variable(
             "we", [H.n_vocab, H.n_embd], dtype=H.dtype,
@@ -436,6 +437,7 @@ def stack(X, X_emb, train, step=None, cache=None):
 
     with tf.variable_scope('sos_token'):
         if H.num_self_gen_in_use > 0 and not H.use_unconditional_augmentation:
+            #use conditional augmentation
             y_gen_idx = 0
             sos_tok = 0
             for typ in H.self_gen_types:
@@ -471,7 +473,7 @@ def stack(X, X_emb, train, step=None, cache=None):
         h = tf.concat([sos_tok, h], axis=1)[:, -1:, :]
 
     new_cache = []
-    modes = H.attention_layers.split(',')
+    modes = H.attention_layers.split(',') #
     assert H.n_layer % len(modes) == 0
 
     for layer_idx in range(H.n_layer):
@@ -546,7 +548,7 @@ def model(train=False):
         if H.rand_augment and train:
             assert network_input.shape[-1] == 3072, 'TODO: support other image sizes'
             network_input = tf.reshape(tf.cast(network_input, tf.uint8), [-1, 32, 32, 3])
-            if H.rand_augment_conditioning:
+            if H.rand_augment_conditioning: 
                 if H.use_unconditional_augmentation:
                     raise NotImplementedError
                 rand_augment_idx = [t.sos_name for t in H.self_gen_types if t.is_used].index('sos_aa') #sos_aa is the name of the variable s

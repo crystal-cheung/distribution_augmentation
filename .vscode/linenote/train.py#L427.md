@@ -1,0 +1,1 @@
+h have been through from h = bs.embedding_lookup(we, X)->dropout->add_position_embedding(h, X_emb, train, step=step)->h = tf.concat([sos_tok, h], axis=1)[:, -1:, :]->h = tf.concat([cache[layer_idx], h], axis=1)->sparse_attention
